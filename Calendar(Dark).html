@@ -19,8 +19,21 @@
       padding: 20px;
     }
     h2 {
-      margin-bottom: 10px;
+      margin: 10px 0;
       font-weight: normal;
+    }
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .btn {
+      cursor: pointer;
+      background: #333;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
     }
     table {
       width: 100%;
@@ -29,6 +42,7 @@
     th, td {
       padding: 10px;
       border: 1px solid #333;
+      text-align: center;
     }
     th {
       background: #333;
@@ -38,19 +52,39 @@
     }
     .today {
       background: #0078d7;
-      color: white;
+      color: white !important;
       font-weight: bold;
       border-radius: 50%;
+    }
+    .holiday {
+      color: #ff4d4d !important; /* 공휴일 빨간색 */
+      font-weight: bold;
+    }
+    .sunday {
+      color: #ff4d4d; /* 일요일 빨간색 */
+    }
+    .saturday {
+      color: #4da6ff; /* 토요일 파란색 */
     }
   </style>
 </head>
 <body>
   <div class="calendar">
-    <h2 id="month-year"></h2>
+    <div class="nav">
+      <button class="btn" onclick="changeMonth(-1)">◀ 이전 달</button>
+      <h2 id="month-year"></h2>
+      <button class="btn" onclick="changeMonth(1)">다음 달 ▶</button>
+    </div>
     <table>
       <thead>
         <tr>
-          <th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th>
+          <th class="sunday">일</th>
+          <th>월</th>
+          <th>화</th>
+          <th>수</th>
+          <th>목</th>
+          <th>금</th>
+          <th class="saturday">토</th>
         </tr>
       </thead>
       <tbody id="calendar-body"></tbody>
@@ -58,45 +92,20 @@
   </div>
 
   <script>
-    function generateCalendar() {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = today.getMonth();
+    let current = new Date();
 
-      // 월 제목 업데이트
-      const monthYear = document.getElementById("month-year");
-      const monthNames = ["1월","2월","3월","4월","5월","6월",
-                          "7월","8월","9월","10월","11월","12월"];
-      monthYear.textContent = `${year}년 ${monthNames[month]}`;
-
-      // 날짜 채우기
-      const firstDay = new Date(year, month, 1).getDay();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      const calendarBody = document.getElementById("calendar-body");
-      calendarBody.innerHTML = "";
-
-      let date = 1;
-      for (let i = 0; i < 6; i++) {
-        let row = document.createElement("tr");
-        for (let j = 0; j < 7; j++) {
-          let cell = document.createElement("td");
-          if (i === 0 && j < firstDay) {
-            cell.textContent = "";
-          } else if (date > daysInMonth) {
-            cell.textContent = "";
-          } else {
-            cell.textContent = date;
-            if (date === today.getDate()) {
-              cell.classList.add("today");
-            }
-            date++;
-          }
-          row.appendChild(cell);
-        }
-        calendarBody.appendChild(row);
-      }
-    }
-    generateCalendar();
-  </script>
-</body>
-</html>
+    // ✅ 중국 공휴일 데이터 (2025~2026, 공식 발표 기준 반영)
+    const holidays = {
+      // 2025
+      "2025-01-01": "신정",
+      "2025-01-28": "춘절",
+      "2025-01-29": "춘절",
+      "2025-01-30": "춘절",
+      "2025-01-31": "춘절",
+      "2025-02-01": "춘절",
+      "2025-02-02": "춘절",
+      "2025-04-04": "청명절",
+      "2025-05-01": "노동절",
+      "2025-05-02": "노동절",
+      "2025-05-03": "노동절",
+      "2025-05-0
