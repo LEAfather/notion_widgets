@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Notion Friendly Calendar</title>
+  <title>중국 공휴일 달력</title>
   <style>
     body {
       margin: 0;
@@ -18,10 +18,7 @@
       text-align: center;
       padding: 20px;
     }
-    h2 {
-      margin: 10px 0;
-      font-weight: normal;
-    }
+    h2 { margin: 10px 0; font-weight: normal; }
     .nav {
       display: flex;
       justify-content: space-between;
@@ -35,37 +32,15 @@
       padding: 5px 10px;
       border-radius: 5px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 10px;
-      border: 1px solid #333;
-      text-align: center;
-    }
-    th {
-      background: #333;
-    }
-    td {
-      background: #2a2a2a;
-    }
-    .today {
-      background: #0078d7;
-      color: white !important;
-      font-weight: bold;
-      border-radius: 50%;
-    }
-    .holiday {
-      color: #ff4d4d !important; /* 공휴일 빨간색 */
-      font-weight: bold;
-    }
-    .sunday {
-      color: #ff4d4d; /* 일요일 빨간색 */
-    }
-    .saturday {
-      color: #4da6ff; /* 토요일 파란색 */
-    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px; border: 1px solid #333; text-align: center; }
+    th { background: #333; }
+    td { background: #2a2a2a; }
+    .today { background: #0078d7; color: white !important; font-weight: bold; border-radius: 50%; }
+    .holiday { color: #ff4d4d !important; font-weight: bold; }
+    .workday { color: #ffd633 !important; font-weight: bold; } /* 대체 근무일 */
+    .sunday { color: #ff4d4d; }
+    .saturday { color: #4da6ff; }
   </style>
 </head>
 <body>
@@ -93,19 +68,78 @@
 
   <script>
     let current = new Date();
+    let holidays = {};
 
-    // ✅ 중국 공휴일 데이터 (2025~2026, 공식 발표 기준 반영)
-    const holidays = {
-      // 2025
-      "2025-01-01": "신정",
-      "2025-01-28": "춘절",
-      "2025-01-29": "춘절",
-      "2025-01-30": "춘절",
-      "2025-01-31": "춘절",
-      "2025-02-01": "춘절",
-      "2025-02-02": "춘절",
-      "2025-04-04": "청명절",
-      "2025-05-01": "노동절",
-      "2025-05-02": "노동절",
-      "2025-05-03": "노동절",
-      "2025-05-0
+    async function loadHolidays(year) {
+      try {
+        const res = await fetch(`https://timor.tech/api/holiday/year/${year}/`);
+        const data = await res.json();
+        if (data.code === 0) holidays = data.holiday;
+      } catch (e) {
+        console.error("공휴일 API 불러오기 실패", e);
+      }
+    }
+
+    async function generateCalendar(year, month) {
+      await loadHolidays(year);
+
+      const today = new Date();
+      const monthYear = document.getElementById("month-year");
+      const monthNames = ["1월","2월","3월","4월","5월","6월",
+                          "7월","8월","9월","10월","11월","12월"];
+      monthYear.textContent = `${year}년 ${monthNames[month]}`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const calendarBody = document.getElementById("calendar-body");
+      calendarBody.innerHTML = "";
+
+      let date = 1;
+      for (let i = 0; i < 6; i++) {
+        let row = document.createElement("tr");
+        for (let j = 0; j < 7; j++) {
+          let cell = document.createElement("td");
+          if (i === 0 && j < firstDay) {
+            cell.textContent = "";
+          } else if (date > daysInMonth) {
+            cell.textContent = "";
+          } else {
+            const fullDate = `${year}-${String(month+1).padStart(2,"0")}-${String(date).padStart(2,"0")}`;
+            cell.textContent = date;
+
+            // 오늘 날짜
+            if (date === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+              cell.classList.add("today");
+            }
+
+            // 주말 색상
+            if (j === 0) cell.classList.add("sunday");
+            if (j === 6) cell.classList.add("saturday");
+
+            // 공휴일 / 대체 근무일 표시
+            if (holidays[fullDate]) {
+              if (holidays[fullDate].holiday) {
+                cell.classList.add("holiday");
+              } else {
+                cell.classList.add("workday");
+              }
+              cell.title = holidays[fullDate].name;
+            }
+
+            date++;
+          }
+          row.appendChild(cell);
+        }
+        calendarBody.appendChild(row);
+      }
+    }
+
+    function changeMonth(delta) {
+      current.setMonth(current.getMonth() + delta);
+      generateCalendar(current.getFullYear(), current.getMonth());
+    }
+
+    generateCalendar(current.getFullYear(), current.getMonth());
+  </script>
+</body>
+</html>
